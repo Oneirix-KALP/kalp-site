@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KALP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="KALP is a 3D horror game about a modern apartment built over a hidden medieval cult complex.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* One long descent: the hero is the apartment, the cross-section shows the two floors, then the Order's history, the three endings, and the QR card at the bottom of the stairs. */
+:root {
+  --void: #0a0506;
+  --crypt: #150709;
+  --oxblood: #4a0d12;
+  --blood: #c1121f;
+  --ember: #e5383b;
+  --bone: #e6dccb;
+  --ash: #a89c92;
+  --font-display: "IM Fell English", Georgia, "Times New Roman", serif;
+  --font-body: "Spectral", Georgia, "Times New Roman", serif;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { overflow-x: clip; background: var(--void); -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background-color: var(--void);
+  background-image:
+    radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--oxblood) 85%, transparent) 0%, transparent 72%),
+    radial-gradient(120% 40% at 50% 100%, color-mix(in srgb, var(--oxblood) 55%, transparent) 0%, transparent 80%);
+  background-repeat: no-repeat;
+  color: var(--bone);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  overflow-x: clip;
+}
+/* grain and vignette, both static */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.wrap { max-width: 1040px; margin-inline: auto; }
+section, header, footer { padding-block: clamp(3rem, 9vw, 6rem); }
+
+a { color: var(--bone); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+a:hover { color: var(--ember); }
+a:focus-visible, .btn:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text-wrap: balance; }
+h2 { font-size: clamp(2rem, 5.6vw, 3.2rem); line-height: 1.08; margin-bottom: 1.2rem; }
+h3 { font-size: clamp(1.45rem, 3.4vw, 1.8rem); line-height: 1.15; margin-bottom: 0.5rem; }
+p { margin: 0 0 1.1rem; max-width: 60ch; }
+
+/* a thin red rule under each section title, like a cut */
+h2::after {
+  content: "";
+  display: block;
+  width: 3.2rem;
+  height: 2px;
+  margin-top: 0.9rem;
+  background: var(--blood);
+  box-shadow: 0 0 14px var(--blood);
+}
+
+/* hero */
+.hero { position: relative; padding-top: clamp(3.5rem, 11vw, 7rem); min-height: min(92vh, 860px); }
+.ring {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: clamp(300px, 62vw, 720px);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  color: var(--blood);
+  opacity: 0.3;
+  pointer-events: none;
+}
+.ring svg { display: block; width: 100%; height: auto; }
+.hero > *:not(.ring) { position: relative; }
+h1 {
+  font-size: clamp(6rem, 29vw, 14.5rem);
+  line-height: 0.88;
+  letter-spacing: 0.02em;
+  color: var(--blood);
+  text-shadow: 0 0 36px color-mix(in srgb, var(--blood) 55%, transparent), 0 2px 0 var(--oxblood);
+}
+h1 .sub {
+  display: block;
+  margin-top: 1rem;
+  font-size: clamp(1.5rem, 4.6vw, 2.4rem);
+  line-height: 1.1;
+  font-style: italic;
+  color: var(--bone);
+  text-shadow: none;
+  letter-spacing: 0.01em;
+}
+.lede { font-size: clamp(1.15rem, 2.6vw, 1.45rem); line-height: 1.55; margin-top: clamp(1.8rem, 5vw, 2.8rem); max-width: 30ch; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.8rem 0 1.5rem; }
+.btn {
+  display: inline-block;
+  padding: 0.8rem 1.4rem;
+  border: 1.5px solid var(--blood);
+  border-radius: 2px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  text-decoration: none;
+  color: var(--bone);
+}
+.btn:hover { border-color: var(--ember); color: var(--ember); }
+.btn.primary { background: var(--blood); color: var(--bone); }
+.btn.primary:hover { background: var(--ember); border-color: var(--ember); color: var(--void); }
+.meta { color: var(--ash); font-style: italic; margin: 0; max-width: 46ch; }
+
+/* two floors */
+.floors { display: grid; gap: 0; margin-top: 2rem; }
+.floor { padding: clamp(1rem, 3vw, 1.6rem); border: 1.5px solid var(--bone); }
+.floor.below {
+  border-color: var(--blood);
+  background: linear-gradient(to bottom, var(--crypt), color-mix(in srgb, var(--oxblood) 60%, var(--void)));
+  box-shadow: 0 0 60px color-mix(in srgb, var(--blood) 22%, transparent) inset;
+}
+.floor h3 { margin-bottom: 0.9rem; }
+.floor.below h3 { color: var(--ember); }
+.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; }
+.room {
+  min-width: 0;
+  padding: 0.9rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--bone) 40%, transparent);
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+.below .room { border-color: color-mix(in srgb, var(--blood) 75%, transparent); background: rgba(10, 5, 6, 0.5); }
+.room.wide { grid-column: span 2; }
+.stairs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 3vw, 1.6rem);
+  color: var(--ash);
+  font-style: italic;
+}
+.stairs svg { flex: none; width: 54px; height: 36px; color: var(--blood); }
+.stairs p { margin: 0; }
+
+/* the order */
+.order { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3rem; align-items: center; }
+.story { margin: 1.8rem 0 0; padding: 0 0 0 1.4rem; border-left: 2px solid var(--blood); display: grid; gap: 1.4rem; }
+.story dt { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.15; color: var(--ember); }
+.story dd { margin: 0.2rem 0 0; max-width: 46ch; }
+.table-fig { margin: 0; }
+.table-fig svg { display: block; width: 100%; max-width: 380px; height: auto; margin-inline: auto; }
+.table-fig figcaption { text-align: center; color: var(--ash); font-style: italic; font-size: 0.95rem; margin: 0.9rem auto 0; max-width: 34ch; }
+.seat { fill: var(--bone); }
+.seat.empty { fill: var(--blood); }
+.table-ring { fill: none; stroke: var(--oxblood); stroke-width: 22; }
+.table-edge { fill: none; stroke: var(--blood); stroke-width: 1.2; }
+
+/* endings */
+.endings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 2rem; border-top: 1px solid var(--oxblood); }
+.ending { padding: 1.4rem 0; border-bottom: 1px solid var(--oxblood); }
+.ending p { margin: 0; }
+.ending h3 { color: var(--bone); }
+.ending.dark h3 { color: var(--ember); }
+
+/* history note */
+.note { margin-top: 2.4rem; padding: 1rem 1.2rem; border-left: 3px solid var(--blood); background: color-mix(in srgb, var(--oxblood) 40%, transparent); max-width: 62ch; }
+.note p { margin: 0; color: var(--bone); }
+
+/* qr */
+.scan { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; align-items: center; }
+.qr-card { justify-self: start; padding: 14px; background: var(--bone); border: 2px solid var(--blood); box-shadow: 0 0 50px color-mix(in srgb, var(--blood) 40%, transparent); line-height: 0; }
+.qr-card svg { display: block; width: min(240px, 62vw); height: auto; }
+.url { color: var(--ash); font-style: italic; overflow-wrap: anywhere; }
+
+/* team */
+.find { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
+.people, .links { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.people li { font-size: 1.25rem; }
+.links li { font-size: 1.1rem; }
+footer { padding-block: 2.2rem 3.5rem; border-top: 1px solid var(--oxblood); }
+footer p { color: var(--ash); font-size: 0.95rem; margin: 0 0 0.4rem; max-width: 70ch; }
+
+@media (min-width: 720px) {
+  .endings { grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 0; gap: 2.4rem; }
+  .ending { border: 0; border-top: 1px solid var(--blood); padding-top: 1.2rem; }
+  .find { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 3rem; }
+  .scan { grid-template-columns: auto minmax(0, 1fr); gap: 3.4rem; }
+}
+@media (min-width: 860px) {
+  .order { grid-template-columns: minmax(0, 1.1fr) minmax(280px, 380px); gap: 4.5rem; }
+}
+
+
+/* galleries */
+.gallery { columns: 1; column-gap: 14px; margin-top: 2rem; }
+.shot { margin: 0 0 14px; break-inside: avoid; }
+.shot .open { display: block; width: 100%; padding: 0; border: 1px solid color-mix(in srgb, var(--blood) 60%, transparent); background: var(--crypt); cursor: zoom-in; line-height: 0; }
+.shot .open:hover { border-color: var(--ember); box-shadow: 0 0 28px color-mix(in srgb, var(--blood) 40%, transparent); }
+.shot .open:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+.shot img { display: block; width: 100%; height: auto; }
+.shot figcaption { margin-top: 0.5rem; color: var(--ash); font-style: italic; font-size: 0.95rem; line-height: 1.4; }
+dialog#viewer { width: min(1100px, 100vw - 24px); max-height: 94vh; margin: auto; padding: 14px; border: 1px solid var(--blood); background: var(--void); color: var(--bone); overflow: auto; }
+dialog#viewer::backdrop { background: rgba(5, 2, 3, 0.9); }
+dialog#viewer img { display: block; width: 100%; height: auto; max-height: 76vh; object-fit: contain; }
+dialog#viewer p { margin: 0.7rem 0 0; color: var(--ash); font-style: italic; }
+dialog#viewer .close { display: block; margin: 0 0 10px auto; padding: 0.4rem 1rem; border: 1.5px solid var(--blood); background: none; color: var(--bone); font-family: var(--font-display); font-size: 1.05rem; cursor: pointer; }
+dialog#viewer .close:hover { border-color: var(--ember); color: var(--ember); }
+@media (min-width: 600px) { .gallery { columns: 2; } }
+@media (min-width: 960px) { .gallery { columns: 3; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  h1 { animation: title-flicker 9s infinite; }
+  .ring svg { animation: spin 160s linear infinite; }
+  .seat.empty { animation: pulse 2.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+}
+@keyframes title-flicker {
+  0%, 17%, 19%, 62%, 64%, 100% { opacity: 1; }
+  18% { opacity: 0.55; }
+  63% { opacity: 0.7; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.35); }
+}
+</style>
+
+<main>
+  <header class="hero wrap">
+    <div class="ring" aria-hidden="true">
+      <svg viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="200" cy="200" r="190"/>
+        <circle cx="200" cy="200" r="168" stroke-dasharray="3 7"/>
+        <circle cx="200" cy="200" r="120"/>
+        <polygon points="200,80 304,260 96,260"/>
+        <polygon points="200,320 96,140 304,140"/>
+        <circle cx="200" cy="200" r="14"/>
+      </svg>
+    </div>
+    <h1>KALP<span class="sub">the horror within</span></h1>
+    <p class="lede">An ordinary apartment. Strange things in the rooms. A staircase that was never meant to be found.</p>
+    <p class="actions">
+      <a class="btn primary" data-link="trailer" href="#" hidden>Watch the trailer</a>
+      <a class="btn" href="#game">See the game</a>
+      <a class="btn" href="#scan">Open on your phone</a>
+      <a class="btn" href="https://github.com/Oneirix-KALP">See the code</a>
+    </p>
+    <p class="meta">A 3D psychological horror game built in Unreal Engine 5.8. Contains horror themes.</p>
+  </header>
+
+  <section class="wrap" id="game" aria-labelledby="game-h">
+    <h2 id="game-h">From the game</h2>
+    <p>Screens from the build we are showing at the demo.</p>
+    <div class="gallery">
+      <figure class="shot"><button type="button" class="open" data-full="images/game-01.jpg" data-cap="Red arched windows with a figure standing in front of them."><img src="images/game-01.jpg" width="807" height="618" alt="Game screenshot. Red arched windows with a figure standing in front of them." loading="lazy" decoding="async"></button><figcaption>Red arched windows with a figure standing in front of them.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-02.jpg" data-cap="A bedroom lit red, with a cross on the wall."><img src="images/game-02.jpg" width="1522" height="803" alt="Game screenshot. A bedroom lit red, with a cross on the wall." loading="lazy" decoding="async"></button><figcaption>A bedroom lit red, with a cross on the wall.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-03.jpg" data-cap="Two figures guard a corridor that opens onto the old church."><img src="images/game-03.jpg" width="1517" height="811" alt="Game screenshot. Two figures guard a corridor that opens onto the old church." loading="lazy" decoding="async"></button><figcaption>Two figures guard a corridor that opens onto the old church.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-04.jpg" data-cap="Antlered silhouettes against glowing arched windows."><img src="images/game-04.jpg" width="1600" height="684" alt="Game screenshot. Antlered silhouettes against glowing arched windows." loading="lazy" decoding="async"></button><figcaption>Antlered silhouettes against glowing arched windows.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-05.jpg" data-cap="A spiral staircase seen from above, in the editor."><img src="images/game-05.jpg" width="1280" height="720" alt="Game screenshot. A spiral staircase seen from above, in the editor." loading="lazy" decoding="async"></button><figcaption>A spiral staircase seen from above, in the editor.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-06.jpg" data-cap="A figure and a lantern in the dark."><img src="images/game-06.jpg" width="1280" height="720" alt="Game screenshot. A figure and a lantern in the dark." loading="lazy" decoding="async"></button><figcaption>A figure and a lantern in the dark.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/game-07.jpg" data-cap="The dining hall, with antlers on the walls and a heraldic shield."><img src="images/game-07.jpg" width="1280" height="720" alt="Game screenshot. The dining hall, with antlers on the walls and a heraldic shield." loading="lazy" decoding="async"></button><figcaption>The dining hall, with antlers on the walls and a heraldic shield.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="floors-h">
+    <h2 id="floors-h">Two floors, one secret</h2>
+    <p>It starts in a modern apartment where small things go wrong. Every clue points one way: down.</p>
+    <div class="floors">
+      <div class="floor above">
+        <h3>The apartment</h3>
+        <div class="rooms">
+          <div class="room">Bedroom</div>
+          <div class="room">Bedroom</div>
+          <div class="room">Bedroom</div>
+          <div class="room">Washroom</div>
+          <div class="room">Mini-hall</div>
+          <div class="room">Mini-hall</div>
+          <div class="room wide">Hall</div>
+          <div class="room">Kitchen</div>
+        </div>
+      </div>
+      <div class="stairs">
+        <svg viewBox="0 0 54 36" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 4 H14 V14 H26 V24 H38 V34 H52"/></svg>
+        <p>The clues lead to the basement.</p>
+      </div>
+      <div class="floor below">
+        <h3>The basement</h3>
+        <div class="rooms">
+          <div class="room">Old church</div>
+          <div class="room">Devil's Cemetery</div>
+          <div class="room">Satanic Hall</div>
+          <div class="room">Devil's Room</div>
+          <div class="room">Jail</div>
+          <div class="room">Medieval dining hall</div>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:1.2rem;color:var(--ash);font-style:italic">Each basement room reveals one more piece of a cult's history. The demo build shows the horror gate only.</p>
+  </section>
+
+  <section class="wrap" aria-labelledby="order-h">
+    <div class="order">
+      <div>
+        <h2 id="order-h">The Order of the Hollow Crown</h2>
+        <p>A hidden medieval complex sits under the building, built by a cult that wanted to keep people from dying.</p>
+        <dl class="story">
+          <div>
+            <dt>1786</dt>
+            <dd>The Order of the Hollow Crown is founded.</dd>
+          </div>
+          <div>
+            <dt>The Thirteenth Guest</dt>
+            <dd>A ritual meant to preserve human consciousness.</dd>
+          </div>
+          <div>
+            <dt>The experiment fails</dt>
+            <dd>What it left behind is still in the basement.</dd>
+          </div>
+          <div>
+            <dt>You</dt>
+            <dd>The protagonist discovers a connection to that failed experiment.</dd>
+          </div>
+        </dl>
+      </div>
+      <figure class="table-fig">
+        <svg viewBox="0 0 300 300" role="img" aria-labelledby="tb-t">
+          <title id="tb-t">A round table with thirteen seats. Twelve are taken and one is empty.</title>
+          <circle class="table-ring" cx="150" cy="150" r="82"/>
+          <circle class="table-edge" cx="150" cy="150" r="93"/>
+          <circle class="table-edge" cx="150" cy="150" r="71"/>
+          <circle class="seat empty" cx="150.0" cy="32.0" r="9"/>
+          <circle class="seat" cx="204.8" cy="45.5" r="7"/>
+          <circle class="seat" cx="247.1" cy="83.0" r="7"/>
+          <circle class="seat" cx="267.1" cy="135.8" r="7"/>
+          <circle class="seat" cx="260.3" cy="191.8" r="7"/>
+          <circle class="seat" cx="228.2" cy="238.3" r="7"/>
+          <circle class="seat" cx="178.2" cy="264.6" r="7"/>
+          <circle class="seat" cx="121.8" cy="264.6" r="7"/>
+          <circle class="seat" cx="71.8" cy="238.3" r="7"/>
+          <circle class="seat" cx="39.7" cy="191.8" r="7"/>
+          <circle class="seat" cx="32.9" cy="135.8" r="7"/>
+          <circle class="seat" cx="52.9" cy="83.0" r="7"/>
+          <circle class="seat" cx="95.2" cy="45.5" r="7"/>
+        </svg>
+        <figcaption>Thirteen seats. Twelve are taken.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="end-h">
+    <h2 id="end-h">Three endings</h2>
+    <div class="endings">
+      <div class="ending">
+        <h3>Escape</h3>
+        <p>Get out of the building, and leave everything below it as it is.</p>
+      </div>
+      <div class="ending">
+        <h3>Uncover the truth</h3>
+        <p>Piece together what the Order did, and what you have to do with it.</p>
+      </div>
+      <div class="ending dark">
+        <h3>Complete the ritual</h3>
+        <p>Finish what the Order started.</p>
+      </div>
+    </div>
+    <div class="note">
+      <p>The cult is fictional. Real history inspires the setting, and it is kept separate from the supernatural parts of the story.</p>
+    </div>
+  </section>
+
+  <section class="wrap" id="bts" aria-labelledby="bts-h">
+    <h2 id="bts-h">Behind the scenes</h2>
+    <p>How the rooms, lighting and sound come together in Unreal Engine 5.8.</p>
+    <div class="gallery">
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-01.jpg" data-cap="Robed skeletal figures in a green-lit hall, in the editor."><img src="images/bts-01.jpg" width="1527" height="802" alt="Behind the scenes. Robed skeletal figures in a green-lit hall, in the editor." loading="lazy" decoding="async"></button><figcaption>Robed skeletal figures in a green-lit hall, in the editor.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-02.jpg" data-cap="The apartment kitchen, with ambient sound sources placed."><img src="images/bts-02.jpg" width="1600" height="677" alt="Behind the scenes. The apartment kitchen, with ambient sound sources placed." loading="lazy" decoding="async"></button><figcaption>The apartment kitchen, with ambient sound sources placed.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-03.jpg" data-cap="The level editor, with a red cross-and-arch shape in view."><img src="images/bts-03.jpg" width="1280" height="720" alt="Behind the scenes. The level editor, with a red cross-and-arch shape in view." loading="lazy" decoding="async"></button><figcaption>The level editor, with a red cross-and-arch shape in view.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-04.jpg" data-cap="The guillotine room, in the editor."><img src="images/bts-04.jpg" width="1600" height="899" alt="Behind the scenes. The guillotine room, in the editor." loading="lazy" decoding="async"></button><figcaption>The guillotine room, in the editor.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-05.jpg" data-cap="The same scene from another angle, with the audio source marked."><img src="images/bts-05.jpg" width="1280" height="720" alt="Behind the scenes. The same scene from another angle, with the audio source marked." loading="lazy" decoding="async"></button><figcaption>The same scene from another angle, with the audio source marked.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-06.jpg" data-cap="Editing the sound tracks."><img src="images/bts-06.jpg" width="1280" height="720" alt="Behind the scenes. Editing the sound tracks." loading="lazy" decoding="async"></button><figcaption>Editing the sound tracks.</figcaption></figure>
+      <figure class="shot"><button type="button" class="open" data-full="images/bts-07.jpg" data-cap="The whole level from above."><img src="images/bts-07.jpg" width="1455" height="905" alt="Behind the scenes. The whole level from above." loading="lazy" decoding="async"></button><figcaption>The whole level from above.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="wrap" id="scan" aria-labelledby="scan-h">
+    <div class="scan">
+      <div class="qr-card"><svg role="img" aria-label="QR code that opens this page" width="248" height="248" class="qr"><g transform="scale(8)"><path fill="#e6dccb" d="M0 0h31v31h-31z"/><path class="qrl" stroke="#0a0506" d="M1 1.5h7m3 0h1m4 0h1m1 0h3m2 0h7m-29 1h1m5 0h1m1 0h1m2 0h2m2 0h3m1 0h2m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m2 0h3m7 0h1m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m4 0h1m3 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m2 0h6m2 0h1m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m3 0h1m1 0h2m1 0h1m1 0h3m2 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-16 1h3m1 0h1m2 0h1m-21 1h1m1 0h1m1 0h1m1 0h1m4 0h3m3 0h1m1 0h2m3 0h1m2 0h1m-27 1h1m1 0h2m2 0h1m1 0h3m1 0h2m1 0h1m5 0h1m2 0h1m2 0h1m-26 1h1m1 0h2m4 0h2m3 0h1m1 0h1m1 0h1m1 0h3m1 0h3m-29 1h4m1 0h1m1 0h5m1 0h1m1 0h3m1 0h1m1 0h4m2 0h1m-27 1h3m2 0h1m2 0h1m1 0h3m1 0h3m3 0h2m2 0h1m1 0h2m-29 1h2m1 0h1m5 0h1m3 0h1m2 0h3m1 0h3m2 0h1m2 0h1m-28 1h2m1 0h5m11 0h1m2 0h3m1 0h2m-29 1h4m1 0h1m2 0h2m3 0h3m1 0h4m4 0h1m1 0h1m-28 1h1m1 0h2m1 0h2m1 0h2m1 0h4m1 0h2m1 0h4m2 0h1m1 0h2m-27 1h1m2 0h1m4 0h1m5 0h2m2 0h1m1 0h1m2 0h2m1 0h1m-29 1h1m1 0h1m1 0h1m1 0h1m1 0h2m2 0h2m3 0h2m8 0h2m-28 1h1m1 0h1m3 0h2m1 0h2m1 0h2m2 0h1m1 0h1m1 0h1m2 0h2m1 0h1m-28 1h1m2 0h2m1 0h3m3 0h1m1 0h5m1 0h5m-17 1h4m1 0h1m2 0h1m2 0h2m3 0h1m1 0h3m-29 1h7m4 0h1m2 0h1m2 0h1m1 0h2m1 0h1m1 0h2m1 0h2m-29 1h1m5 0h1m3 0h1m1 0h2m2 0h2m2 0h1m3 0h2m-26 1h1m1 0h3m1 0h1m1 0h5m1 0h4m2 0h5m-25 1h1m1 0h3m1 0h1m3 0h4m6 0h2m1 0h2m1 0h3m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h2m6 0h1m4 0h3m2 0h1m-29 1h1m5 0h1m2 0h3m1 0h1m2 0h5m1 0h1m1 0h1m2 0h1m-28 1h7m1 0h3m2 0h1m1 0h3m1 0h5m3 0h2"/></g></svg></div>
+      <div>
+        <h2 id="scan-h">Scan to open KALP</h2>
+        <p>Point your phone camera at the code to open this page, then come back to the booth and play.</p>
+        <p class="url">https://oneirix-kalp.github.io/kalp-site/</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="team-h">
+    <div class="find">
+      <div>
+        <h2 id="team-h">The team</h2>
+        <ul class="people">
+          <li>Manashvi Sharma</li>
+          <li>Akshata Srivastava</li>
+          <li>Palak Lohia</li>
+          <li>Srishti Srivastava</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Find us</h2>
+        <ul class="links">
+          <li><a href="https://github.com/Oneirix-KALP">GitHub</a></li>
+          <li data-link="trailer"><a href="#">Trailer</a></li>
+          <li data-link="linkedin"><a href="#">LinkedIn</a></li>
+          <li data-link="email">Write to us at <a href="#"></a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap">
+    <p>KALP is a student project by Oneirix, from SRM Institute of Science and Technology.</p>
+    <p>The Order of the Hollow Crown and everything it did are fictional.</p>
+  </footer>
+</main>
+
+<dialog id="viewer" aria-label="Image viewer">
+  <button type="button" class="close" aria-label="Close">Close</button>
+  <img alt="">
+  <p></p>
+</dialog>
+
+<script>
+/* Fill these in. Anything left empty is hidden from the page. */
+var LINKS = { trailer: "", linkedin: "", email: "" };
+
+document.querySelectorAll("[data-link]").forEach(function (el) {
+  var key = el.getAttribute("data-link");
+  var value = LINKS[key];
+  if (!value) { el.hidden = true; return; }
+  var a = el.tagName === "A" ? el : el.querySelector("a");
+  if (!a) { return; }
+  if (key === "email") { a.href = "mailto:" + value; a.textContent = value; }
+  else { a.href = value; }
+});
+
+var viewer = document.getElementById("viewer");
+if (viewer && viewer.showModal) {
+  var vimg = viewer.querySelector("img"), vcap = viewer.querySelector("p");
+  document.querySelectorAll(".shot .open").forEach(function (b) {
+    b.addEventListener("click", function () {
+      vimg.src = b.getAttribute("data-full");
+      vimg.alt = b.querySelector("img").alt;
+      vcap.textContent = b.getAttribute("data-cap");
+      viewer.showModal();
+    });
+  });
+  viewer.addEventListener("click", function (e) { if (e.target === viewer || e.target.className === "close") viewer.close(); });
+}
+</script>
+
+</html>
